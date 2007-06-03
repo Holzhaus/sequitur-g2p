@@ -184,7 +184,7 @@ namespace AssertionsPrivate {
 
 #if defined(DEBUG)
 /**
- * Check expensive precodition.   Abort if @c expr is false.
+ * Check expensive precondition.   Abort if @c expr is false.
  *
  * This is theoretically the same as require(), but is checked only
  * in the debugging version.  Use this only if the time needed for

@@ -42,7 +42,8 @@ class SequenceModelTestCase(unittest.TestCase):
 	p = 0.1
 	data = [((), None, - math.log(p))]
 	sm = SequenceModel.SequenceModel()
-	sm.set(data, 0, 0)
+        sm.setInitAndTerm(0, 0)
+	sm.set(data)
 	h = sm.initial()
 	for t in range(10):
 	    self.failUnlessEqual(sm.advanced(h, t), h)
@@ -52,7 +53,8 @@ class SequenceModelTestCase(unittest.TestCase):
 	probs = [ 0.2, 0.3, 0.5 ]
 	data = [((), t+1, - math.log(p)) for t, p in enumerate(probs) ]
 	sm = SequenceModel.SequenceModel()
-	sm.set(data, 0, 0)
+        sm.setInitAndTerm(0, 0)
+	sm.set(data)
 	h = sm.initial()
 	for t in range(1, 4):
 	    self.failUnlessEqual(sm.advanced(h, t), h)
@@ -64,7 +66,8 @@ class SequenceModelTestCase(unittest.TestCase):
 	probs2 = [ 0.4, 0.1, 0.5 ]
 	data += [((2,), t+1, - math.log(p)) for t, p in enumerate(probs2) ]
 	sm = SequenceModel.SequenceModel()
-	sm.set(data, 0, 0)
+        sm.setInitAndTerm(0, 0)
+	sm.set(data)
 	h = sm.initial()
 	h2 = sm.advanced(h, 2)
 	for t in range(1, 4):
@@ -94,8 +97,8 @@ class EstimatorTestCase(unittest.TestCase):
     def testNoData(self):
 	sizeTemplates = [(1,1), (1,0), (0,1)]
 	model = self.obliviousModel(1)
-	sample = Sample(self.sequitur, sizeTemplates, [], model)
-	evidence, logLik = sample.evidence(model)
+	sample = Sample(self.sequitur, sizeTemplates, EstimationGraphBuilder.emergeNewMultigrams, [], model)
+	evidence, logLik = sample.evidence(model, useMaximumApproximation=False)
 	evidence = evidence.asList()
 	self.failUnlessEqual(evidence, [])
 
@@ -103,16 +106,18 @@ class EstimatorTestCase(unittest.TestCase):
 	sizeTemplates = [(1,1), (1,0), (0,1)]
 	model = self.obliviousModel(3)
 	sample = [ ((c,), (c,)) for c in list('abc') ]
-	sample = Sample(self.sequitur, sizeTemplates, sample, model)
-	evidence, logLik = sample.evidence(model)
+        sample = self.sequitur.compileSample(sample)
+	sample = Sample(self.sequitur, sizeTemplates, EstimationGraphBuilder.emergeNewMultigrams, sample, model)
+	evidence, logLik = sample.evidence(model, useMaximumApproximation=False)
 	evidence = evidence.asList()
-	for hist, (l, r), p in evidence:
+	for hist, seg, p in evidence:
+            l, r = self.sequitur.symbol(seg)
 	    self.failUnless(len(l) in range(2))
 	    self.failUnless(len(r) in range(2))
-	    if len(l) == 1 and len(r) == 1:
-		self.failUnlessAlmostEqual(p, 0.6)
-	    elif len(l) == 0 and len(r) == 0:
+	    if l == ('__term__',) and r == ('__term__',):
 		self.failUnlessAlmostEqual(p, 3.0)
+	    elif len(l) == 1 and len(r) == 1:
+		self.failUnlessAlmostEqual(p, 0.6)
 	    else:
 		self.failUnlessAlmostEqual(p, 0.4)
 

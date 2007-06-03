@@ -30,9 +30,8 @@
 #include "Probability.hh"
 #include "Python.hh"
 #include "SequenceModel.hh"
-#include <ext/hash_map>
+#include <tr1/unordered_map>
 #include <vector>
-namespace std { using namespace __gnu_cxx; }
 
 
 class SequenceModelEstimator;
@@ -148,7 +147,7 @@ public:
     };
 
 private:
-    typedef std::hash_map<Event, Probability, Event::Hash> Store;
+    typedef std::unordered_map<Event, Probability, Event::Hash> Store;
     Store evidence_;
 
     const SequenceModel *sequenceModel_;
@@ -212,7 +211,13 @@ public:
     SequenceModelEstimator *makeSequenceModelEstimator() const;
 
     size_t memoryUsed() const {
-	typedef __gnu_cxx::_Hashtable_node<Store::value_type> StoreNode;
+#if __GNUC__ > 4 || (__GNUC__ == 4 && __GNUC_MINOR__ >= 3)
+	typedef std::__detail::_Hash_node<Store::value_type, false> StoreNode;
+#elif __GNUC__ == 4 && __GNUC_MINOR__ == 2
+	typedef std::tr1::__detail::_Hash_node<Store::value_type, false> StoreNode;
+#elif __GNUC__ == 4 && __GNUC_MINOR__ <= 1
+	typedef Internal::hash_node<Store::value_type, false> StoreNode;
+#endif
 	return sizeof(EvidenceStore)
 	    + evidence_.size() * sizeof(StoreNode)
 	    + evidence_.bucket_count() * sizeof(StoreNode*);
@@ -456,7 +461,7 @@ private:
     static const Graph::NodeId newNode = 0;
     static const Graph::NodeId greyNode = 0xfffffff;
     static const Graph::NodeId deadNode = 0xffffffe;
-    typedef std::hash_map<NodeDesc, Graph::NodeId, NodeDesc::Hash> NodeStateMap;
+    typedef std::unordered_map<NodeDesc, Graph::NodeId, NodeDesc::Hash> NodeStateMap;
     NodeStateMap nodeStates_;
     typedef std::pair<NodeDesc, SizeTemplateList::const_iterator> DfsStackItem;
     typedef std::vector<DfsStackItem> DfsStack;
@@ -611,7 +616,13 @@ public:
     }
 
     size_t memoryUsed() const {
-	typedef __gnu_cxx::_Hashtable_node<NodeStateMap::value_type> NodeStateMapNode;
+#if __GNUC__ > 4 || (__GNUC__ == 4 && __GNUC_MINOR__ >= 3)
+	typedef std::__detail::_Hash_node<NodeStateMap::value_type, false> NodeStateMapNode;
+#elif __GNUC__ == 4 && __GNUC_MINOR__ == 2
+	typedef std::tr1::__detail::_Hash_node<NodeStateMap::value_type, false> NodeStateMapNode;
+#elif __GNUC__ == 4 && __GNUC_MINOR__ <= 1
+	typedef Internal::hash_node<NodeStateMap::value_type, false> NodeStateMapNode;
+#endif
 	return sizeof(EstimationGraphBuilder)
 	    + GraphSorter::memoryUsed() - sizeof(GraphSorter)
 	    + sizeTemplates_.capacity() * sizeof(SizeTemplateList::value_type)
@@ -653,7 +664,7 @@ private:
 	Probability backOffWeight;
 	Group() : total() {}
     };
-    typedef std::hash_map<SequenceModel::History, Group, Core::conversion<SequenceModel::History, size_t> > GroupStore;
+    typedef std::unordered_map<SequenceModel::History, Group, Core::conversion<SequenceModel::History, size_t> > GroupStore;
 
     const SequenceModel *sequenceModel_;
     ItemList items;
@@ -678,7 +689,7 @@ SequenceModelEstimator *EvidenceStore::makeSequenceModelEstimator() const {
 
     sme->items.clear();
     SequenceModelEstimator::Item item;
-    std::hash_map<Event, size_t, Event::Hash> pos;
+    std::unordered_map<Event, size_t, Event::Hash> pos;
     for (Store::const_iterator ev = evidence_.begin(); ev != evidence_.end(); ++ev) {
 	item.history     = ev->first.history;
 	item.token       = ev->first.token;

@@ -30,10 +30,9 @@
 
 #include "Assertions.hh"
 #include "Types.hh"
-#include <ext/hash_map>
+#include <tr1/unordered_map>
 #include <ext/functional>
-namespace std { using namespace __gnu_cxx; }
-
+namespace std { using __gnu_cxx::binary_compose; }
 
 namespace Core {
 
@@ -149,7 +148,7 @@ namespace Core {
     };
 
     template <class T_Item, class T_Key,
-	      class T_KeyFunction, template <typename, typename,typename> class T_Map,
+	      class T_KeyFunction, template <typename, typename, class> class T_Map,
 	      class T_Hash_Obj = typename std::hash<T_Key> >
     class TracedHeap : public UntracedHeap<T_Item> {
 	typedef UntracedHeap<T_Item> Precursor;
@@ -220,6 +219,8 @@ namespace Core {
 	    Precursor(precedes, maxSize) {}
     };
 
+    template <typename T_Key, typename T_Tp, class T_Hash>
+    class default_unordered_map : public std::unordered_map<T_Key, T_Tp, T_Hash> {};
 
     /**
      * Heap-based priority queue class template with random access.
@@ -230,11 +231,11 @@ namespace Core {
 	      class T_Hash_Obj = std::hash<T_Key> >
     class TracedPriorityQueue :
 	public PriorityQueueBase<
-	TracedHeap<T_Item, T_Key, T_KeyFunction, std::hash_map, T_Hash_Obj>,
+	TracedHeap<T_Item, T_Key, T_KeyFunction, default_unordered_map, T_Hash_Obj>,
 	T_PriorityFunction>
     {
 	typedef PriorityQueueBase<
-	    TracedHeap<T_Item, T_Key, T_KeyFunction, std::hash_map, T_Hash_Obj>, T_PriorityFunction> Precursor;
+	    TracedHeap<T_Item, T_Key, T_KeyFunction, default_unordered_map, T_Hash_Obj>, T_PriorityFunction> Precursor;
     public:
 	TracedPriorityQueue(u32 maxSize = Type<u32>::max) : Precursor(maxSize) {}
 	TracedPriorityQueue(const T_PriorityFunction &precedes, u32 maxSize = Type<u32>::max) :

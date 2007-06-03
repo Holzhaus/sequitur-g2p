@@ -29,11 +29,11 @@
 #define _MULTIGRAM_HH
 
 #include <vector>
-#include <ext/hash_map>
+#include <tr1/unordered_map>
 #include "SequenceModel.hh"
 #include "Python.hh"
-namespace std { using namespace __gnu_cxx; }
 
+namespace std { using namespace tr1; }
 
 #if !defined(MULTIGRAM_SIZE)
 #error "You need to define MULTIGRAM_SIZE."
@@ -126,7 +126,7 @@ public:
     typedef u32 Index;
 
 private:
-    typedef std::hash_map<JointMultigram, Index, JointMultigram::Hash> Map;
+    typedef std::unordered_map<JointMultigram, Index, JointMultigram::Hash> Map;
     typedef std::vector<JointMultigram> List;
     Map map_;
     List list_;
@@ -166,7 +166,13 @@ public:
     }
 
     size_t memoryUsed() const {
-	typedef __gnu_cxx::_Hashtable_node<Map::value_type> MapNode;
+#if __GNUC__ > 4 || (__GNUC__ == 4 && __GNUC_MINOR__ >= 3)
+	typedef std::__detail::_Hash_node<Map::value_type, false> MapNode;
+#elif __GNUC__ == 4 && __GNUC_MINOR__ == 2
+	typedef std::tr1::__detail::_Hash_node<Map::value_type, false> MapNode;
+#elif __GNUC__ == 4 && __GNUC_MINOR__ <= 1
+	typedef Internal::hash_node<Map::value_type, false> MapNode;
+#endif
 	return sizeof(MultigramInventory)
 	    + list_.capacity() * sizeof(List::value_type)
 	    + map_.size() * sizeof(MapNode)

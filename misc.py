@@ -56,13 +56,19 @@ megabyte = 1024 * 1024
 
 def meminfo():
     pid = os.getpid()
-    data = open('/proc/%d/statm' % pid).read()
+    try:
+        data = open('/proc/%d/statm' % pid).read()
+    except:
+        raise NotImplementedError
     data = map(int, data.split())
     size, resident, shared, trs, drs, lrs, dt = tuple(data)
     return size * pageSize, resident * pageSize
 
 def reportMemoryUsage():
-    size, resident = meminfo()
+    try:
+        size, resident = meminfo()
+    except NotImplementedError:
+        return
     print 'memory usage:  virtual %1.1f MB   resident %1.1f MB' % \
 	  (size / megabyte, resident / megabyte)
 

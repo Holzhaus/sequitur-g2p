@@ -26,16 +26,16 @@ negligent actions or intended actions or fraudulent concealment.
 """
 
 from distutils.core import setup, Extension
+import numpy
 import os
 
-os.system('swig -c++ -python -shadow -o _sequitur_.cc sequitur.ii')
 sequiturExtension = Extension(
     '_sequitur_',
     language = 'c++',
     define_macros=[
 	('MULTIGRAM_SIZE', '2')],
     sources = [
-	'_sequitur_.cc',
+	'sequitur.i',
 	'Assertions.cc',
 	'Types.cc',
 	'Utility.cc',
@@ -59,6 +59,8 @@ sequiturExtension = Extension(
         'Estimation.cc',
         'SequenceModel.cc',
         'Translation.cc'],
+    include_dirs = [
+        os.path.join(path, 'core/include') for path in numpy.__path__ ],
     extra_compile_args = [
 	'-fpermissive']
     )
@@ -72,7 +74,7 @@ sequiturModules = [
     'misc',
     'sequitur',
     'sequitur_',
-    'symbol',
+    'symbols',
     'tool']
 
 sequiturScripts = [
