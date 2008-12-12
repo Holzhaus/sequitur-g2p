@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+o#!/usr/bin/env python
 
 """
 Create an open-vocabulary speech recognition model

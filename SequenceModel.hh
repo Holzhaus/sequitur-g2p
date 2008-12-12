@@ -35,11 +35,35 @@
 #include <string>
 #include <vector>
 
+#if defined(INSTRUMENTATION)
+#include <ext/hash_map>
+namespace std { using namespace __gnu_cxx; }
 
-#ifdef OBSOLETE
+struct StringHash {
+    size_t operator() (const char *s) const {
+	size_t result = 0;
+	while (*s) result = 5 * result + size_t(*s++);
+	return result;
+    }
+    size_t operator() (const std::string &s) const {
+	return (*this)(s.c_str());
+    }
+};
+
+struct StringEquality :
+    std::binary_function<const char*, const char*, bool>
+{
+    bool operator() (const char *s, const char *t) const {
+	return (s == t) || (strcmp(s, t) == 0);
+    }
+    bool operator() (const std::string &s, const std::string &t) const {
+	return (s == t);
+    }
+};
+
 class StringInventory {
     typedef std::vector<const char*> List;
-    typedef ::hash_map<const char*, u32, Core::StringHash, Core::StringEquality> Map;
+    typedef std::hash_map<const char*, u32, StringHash, StringEquality> Map;
     List list_;
     Map map_;
 public:
@@ -74,7 +98,7 @@ public:
 	    return wmi->second;
     }
 };
-#endif // OBSOLETE
+#endif // INSTRUMENTATION
 
 class SequenceModel {
 public:

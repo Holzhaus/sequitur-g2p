@@ -74,7 +74,7 @@ namespace AssertionsPrivate {
 #endif // SWIGPYTHON
 
 %{
-#include "numarray/arrayobject.h"
+#include "numpy/arrayobject.h"
     typedef PyArrayObject* DoubleVector;
 %}
 %init %{
@@ -207,6 +207,14 @@ public:
     int memoryUsed();
 };
 
+#if defined(INSTRUMENTATION)
+class StringInventory {
+public:
+    StringInventory(PyObject*);
+    ~StringInventory();
+};
+#endif // INSTRUMENTATION
+
 // ===========================================================================
 %{
 #include "Estimation.cc"
@@ -214,9 +222,9 @@ public:
 
 class EstimationGraph {
 public:
-/*  OBSOLETE
+#if defined(INSTRUMENTATION)
     void draw(FILE*, const StringInventory*, const SequenceModel*) const;
- */
+#endif
     int memoryUsed();
 };
 
@@ -310,6 +318,9 @@ class Translator_NBestContext {
     Translator_NBestContext();
 public:
     ~Translator_NBestContext();
+#if defined(INSTRUMENTATION)
+    void draw(FILE*, const StringInventory*) const;
+#endif // INSTRUMENTATION
 };
 
 class Translator {

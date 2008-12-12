@@ -40,7 +40,7 @@ private:
     SequenceModel *sequenceModel_;
 
     u32 minLeftLen_,  maxLeftLen_;
-    typedef std::hash_multimap<Multigram, SequenceModel::Token, Multigram::Hash> LeftMap;
+    typedef std::unordered_multimap<Multigram, SequenceModel::Token, Multigram::Hash> LeftMap;
     LeftMap leftMap_;
 
     u32 stackLimit_;
@@ -137,7 +137,7 @@ private:
 	Hyp, State,
 	Hyp::KeyFunction, Hyp::PriorityFunction,
 	State::Hash> Open;
-    typedef std::hash_map<State, LogProbability, State::Hash> Closed;
+    typedef std::unordered_map<State, LogProbability, State::Hash> Closed;
 
     Open open_;
     Closed closed_;
@@ -294,7 +294,7 @@ public:
 		current = open_.top(); open_.pop();
 
 		if (current.n == initial_)
-		    return next.trace;
+		    return current.trace;
 
 		for (Graph::IncomingEdgeIterator e = graph_.incomingEdges(current.n); e; ++e) {
 		    next.n = graph_.source(*e);
@@ -311,12 +311,31 @@ public:
 	    }
 	    return Core::Ref<Trace>();
 	}
-
+#if defined(INSTRUMENTATION)
+    public:
+	void draw(FILE *f, const StringInventory *si) const {
+	    fprintf(f,
+		    "digraph \"translation graph\" {\n"
+		    "ranksep = 1.0;\n"
+		    "rankdir = LR;\n");
+	    for (Graph::NodeId n = graph_.nodesBegin(); n != graph_.nodesEnd(); ++n) {
+		fprintf(f, "n%d [label=\"%d\"]\n", n, n);
+	    }
+	    for (Graph::EdgeId e = graph_.edgesBegin(); e != graph_.edgesEnd(); ++e) {
+		std::string label = (si) ? si->symbol(token_[e]) : std::string("?");
+		fprintf(f, "n%d -> n%d [label=\"%s %f\"]\n",
+			graph_.source(e), graph_.target(e),
+			label.c_str(), probability_[e].probability());
+	    }
+	    fprintf(f, "}\n");
+	    fflush(f);
+	}
+#endif // INSTRUMENTATION
     }; // struct NBestContext
 
 private:
     typedef HypBase BuildHyp;
-    typedef std::hash_map<State, Graph::NodeId, State::Hash> StateNodeMap;
+    typedef std::unordered_map<State, Graph::NodeId, State::Hash> StateNodeMap;
     typedef Core::TracedPriorityQueue<
 	BuildHyp, State,
 	BuildHyp::KeyFunction, BuildHyp::PriorityFunction,

@@ -28,7 +28,7 @@ negligent actions or intended actions or fraudulent concealment.
 """
 
 from math import *
-from numarray import *
+from numpy import *
 
 
 gold  = (1 + sqrt(5)) / 2

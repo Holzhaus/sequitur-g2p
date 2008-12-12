@@ -11,8 +11,12 @@ Sequitur G2P is a data-driven grapheme-to-phoneme converter written at
 RWTH Aachen University by Maximilian Bisani.
 
 The method used in this software is described in
-M. Bisani and H. Ney: "Joint-Sequence Models for Grapheme-to-Phoneme
-Conversion". Submitted for publication in Speech Communication
+
+  M. Bisani and H. Ney: "Joint-Sequence Models for Grapheme-to-Phoneme
+  Conversion". Speech Communication, Volume 50, Issue 5, May 2008,
+  Pages 434-451 
+
+  (avaliable online at http://dx.doi.org/10.1016/j.specom.2008.01.002)
 
 This software is made available to you under terms of the GNU Public
 License. It can be used for experimentation and as part of other free
@@ -23,7 +27,7 @@ please cite the above paper. (You should feel obliged to do so by
 rules of good scientific conduct.)
 
 You may contact the author with any questions or comments via e-mail:
-maximilian.bisani@informatik.rwth-aachen.de
+maximilian.bisani@rwth-aachen.de
 
 
 License
@@ -56,9 +60,13 @@ Installing
 
 To build and use this software you need to have the following part installed:
 - Python (http://www.python.org)
-  (It should work with 2.3, 2.4, 2.5 and hopefully 2.6.)
+  tested with 2.5
 - SWIG (http://www.swig.org)
+  tested with 1.3.31
+- NumPy (http://numpy.scipy.org)
+  tested with 1.0.4
 - a C++ compiler that's recognized by Python's distutils.
+  tested with GCC 4.1, 4.2 and 4.3
 
 To install change to the source directory and type:
     python setup.py install --prefix /usr/local
@@ -119,5 +127,5 @@ Random comments:
   standard in, or standard out.
 - If a file name ends in ".gz", it is assumed that the file is (or
   should be) compressed using gzip.
-- For the  time being you need  to type g2p.py --help  and/or read the
+- For the  time being you need to type g2p.py --help  and/or read the
   source to find out the other things g2p.py can do.  Sorry about that.

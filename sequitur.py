@@ -27,9 +27,10 @@ commercially. In any case guarantee/warranty shall be limited to gross
 negligent actions or intended actions or fraudulent concealment.
 """
 
-import itertools, numarray, math, sets, sys
+import itertools, math, sets, sys
+import numpy as num
 import sequitur_, SequenceModel, Minimization, misc
-from symbol import SymbolInventory
+from symbols import SymbolInventory
 from misc import reversed, sorted, set
 
 class MultigramInventory(sequitur_.MultigramInventory):
@@ -306,7 +307,7 @@ class StaticDiscounts:
 	self.discount = discount
 	if self.discount is None:
 	    self.discount = [0.0]
-	self.discount = numarray.array(self.discount, type=numarray.Float64)
+	self.discount = num.array(self.discount, dtype=num.float64)
 
     def adjust(self, context, evidence, order):
         if len(self.discount) < order+1:
@@ -323,7 +324,7 @@ class FixedDiscounts:
     Dummy discount adjuster, that just returns a fixed value.
     """
     def __init__(self, discount):
-	self.discount = numarray.array(discount, type=numarray.Float64)
+	self.discount = num.array(discount, dtype=num.float64)
 
     def __call__(self, modelFactory, develSample, discount, useMaximumApproximation):
         return self
@@ -350,7 +351,7 @@ class DefaultDiscountAdjuster:
 	self.modelFactory = modelFactory
 	self.develSample = develSample
 	if discount is not None:
-	    discount = numarray.asarray(discount, type=numarray.Float64)
+	    discount = num.asarray(discount, dtype=num.float64)
 	self.discounts = [None, discount]
         self.shallUseMaximumApproximation = useMaximumApproximation
 
@@ -372,51 +373,50 @@ class DefaultDiscountAdjuster:
 	discount, ll = Minimization.linearMinimization(
 	    criterion, initialGuess, tolerance=1e-4)
 	discount = max(0.0, discount)
-	discount = numarray.array([discount])
+	discount = num.array([discount])
 	return discount, -ll
 
     def adjustHigherOrder(self, evidence, order, maximumDiscount):
-	na = numarray
-
 	def criterion(discount):
-	    disc = tuple(na.maximum(0.0, discount))
+	    disc = tuple(num.maximum(0.0, discount))
 	    sm = self.modelFactory.sequenceModel(evidence, disc)
 	    ll = self.develSample.logLik(sm, self.shallUseMaximumApproximation)
 	    crit = - ll \
-		   - sum(na.minimum(discount, 0)) \
-		   + sum(na.maximum(discount - maximumDiscount, 0))
+		   - sum(num.minimum(discount, 0)) \
+		   + sum(num.maximum(discount - maximumDiscount, 0))
 	    print discount, ll, crit # TESTING
 	    return crit
 
 	initialGuess = self.discounts[-1]
 	firstDirection = None
 	if initialGuess is None:
-	    initialGuess = 0.1 * na.arange(1, order+2, type=na.Float64)
+	    initialGuess = 0.1 * num.arange(1, order+2, dtype=num.float64)
 	elif len(initialGuess) < order+1:
+            oldGuess = initialGuess
 	    oldSize = len(initialGuess)
-	    highestOrderDiscount = initialGuess[-1]
-	    initialGuess.resize(order+1)
-	    initialGuess[oldSize:] = highestOrderDiscount
+            initialGuess = num.zeros(order+1, dtype=num.float64)
+            initialGuess[:oldSize] = oldGuess
+	    initialGuess[oldSize:] = oldGuess[-1]
 	elif len(initialGuess) > order+1:
 	    initialGuess = initialGuess[:order+1]
 	else:
 	    previous = self.discounts[-2]
 	    if previous is not None and len(previous) == order+1:
 		firstDirection = initialGuess - previous
-		if not na.sometrue(na.abs(firstDirection) > 1e-4):
+		if not num.sometrue(num.abs(firstDirection) > 1e-4):
 		    firstDirection = None
 
-	directions = na.identity(order+1, type=na.Float64)
+	directions = num.identity(order+1, dtype=num.float64)
 	directions = directions[::-1]
 	if firstDirection is not None:
-	    directions = na.concatenate((firstDirection[na.NewAxis,:], directions))
+	    directions = num.concatenate((firstDirection[num.newaxis,:], directions))
 	directions *= 0.1
 	print directions # TESTING
 
 	discount, ll = Minimization.directionSetMinimization(
 	    criterion, initialGuess, directions, tolerance=1e-4)
 
-	discount = na.maximum(0.0, discount)
+	discount = num.maximum(0.0, discount)
 	return discount, -ll
 
     def adjust(self, context, evidence, order):
@@ -563,7 +563,7 @@ class ModelTemplate:
 	print >> context.log, '  count total / max: %s / %s' % (counts.total(), counts.maximum())
 	self.showMostEvident(context.log, counts, 10) ### TESTING
 	context.model = Model(self.sequitur)
-	context.model.discount = numarray.zeros(counts.maximumHistoryLength() + 1)
+	context.model.discount = num.zeros(counts.maximumHistoryLength() + 1)
 	context.model.sequenceModel = self.sequenceModel(counts, context.model.discount)
 	print >> context.log, '  model size: %s' % context.model.sequenceModel.size()
         print >> context.log

@@ -105,51 +105,6 @@ namespace Core {
     template <class A, class B>
     inline  tied<A,B> tie(A &a, B &b) { return tied<A,B>(a, b); }
 
-    /** Core::abs : wrapper for several absolute value functions */
-
-    inline int abs(int v) { return ::abs(v); }
-    inline long int abs(long int v) { return ::labs(v); }
-    inline long long int abs(long long int v) { return ::llabs(v); }
-    inline float abs(float v) { return ::fabsf(v); }
-    inline double abs(double v) { return ::fabs(v); }
-    inline long double abs(long double v) { return ::fabsl(v); }
-    template<class T> T abs(const std::complex<T> &v) { return std::abs(v); }
-
-    /** absoluteValue: functor for absolute value */
-    template<class T> struct absoluteValue : public std::unary_function<T, T> {
-	T operator() (T v) const { return Core::abs(v); }
-	T operator() (const std::complex<T> &v) const { return abs(v); }
-    };
-
-    /**
-     *  Maximal absolute value in @c v is returned in @c m.
-     *  If @c v is empty, result is set to Type<T>::min.
-     */
-    template<class InputIterator, class M>
-    void maxAbsoluteElement(InputIterator begin, InputIterator end, M &m) {
-	m = Type<M>::min;
-	for(; begin != end; ++ begin) {
-	    M absValue = (M)Core::abs(*begin);
-	    if (absValue > m)
-		m = absValue;
-	}
-    }
-
-    template<class T>
-    T maxAbsoluteElement(const std::vector<T> &v) {
-	T m; maxAbsoluteElement(v.begin(), v.end(), m); return m;
-    }
-
-    template<class T>
-    T maxAbsoluteElement(const std::vector<std::complex<T> > &v) {
-	T m; maxAbsoluteElement(v.begin(), v.end(), m); return m;
-    }
-
-    /** power: functor for pow function */
-    template<class T> struct power : public std::binary_function<T, T, T> {
-	T operator() (T x, T y) const { return pow(x, y); }
-    };
-
     /** Core::round : wrapper for several round functions */
     inline float round(float v) { return ::roundf(v); }
     inline double round(double v) { return ::round(v); }
@@ -247,14 +202,14 @@ namespace Core {
      */
     inline bool isAlmostEqual(f32 a, f32 b, f32 tolerance = (f32)1) {
 	require_(tolerance > (f32)0);
-	f32 d = Core::abs(a - b);
-	f32 e = (Core::abs(a) + Core::abs(b) + Type<f32>::delta) * Type<f32>::epsilon * tolerance;
+	f32 d = std::abs(a - b);
+	f32 e = (std::abs(a) + std::abs(b) + Type<f32>::delta) * Type<f32>::epsilon * tolerance;
 	return (d < e);
     }
     inline bool isAlmostEqual(f64 a, f64 b, f64 tolerance = (f64)1) {
 	require_(tolerance > (f64)0);
-	f64 d = Core::abs(a - b);
-	f64 e = (Core::abs(a) + Core::abs(b) + Type<f64>::delta) * Type<f64>::epsilon * tolerance;
+	f64 d = std::abs(a - b);
+	f64 e = (std::abs(a) + std::abs(b) + Type<f64>::delta) * Type<f64>::epsilon * tolerance;
 	return (d < e);
     }
 

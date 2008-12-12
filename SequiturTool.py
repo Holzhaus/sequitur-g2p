@@ -29,7 +29,8 @@ negligent actions or intended actions or fraudulent concealment.
 
 import os.path, sys
 import cPickle as pickle
-import numarray, operator
+import operator
+import numpy as num
 from sequitur import Sequitur, ModelTemplate, DefaultDiscountAdjuster, StaticDiscounts, FixedDiscounts, EagerDiscountAdjuster
 from sequitur import Translator
 from Evaluation import Evaluator
@@ -90,7 +91,7 @@ class Tool:
             discount = eval(self.options.fixed_discount)
             if not operator.isSequenceType(discount):
                 discount = [discount]
-            discount = numarray.array(discount)
+            discount = num.array(discount)
         else:
             discount = None
             

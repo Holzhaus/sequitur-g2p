@@ -28,9 +28,11 @@
 #include "SequenceModel.hh"
 #include "Types.hh"
 #include "Utility.hh"
+#include <memory>
 #include <stdexcept>
 
-#ifdef OBSOLETE
+
+#if defined(INSTRUMENTATION)
 // ===========================================================================
 // StringInventory
 
@@ -60,7 +62,7 @@ StringInventory::~StringInventory() {
     for (List::iterator i = list_.begin(); i != list_.end(); ++i)
 	free((void*) *i);
 }
-#endif // OBSOLETE
+#endif // INSTRUMENTATION
 
 // ===========================================================================
 // internal data structures

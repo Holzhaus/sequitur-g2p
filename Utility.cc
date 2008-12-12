@@ -26,6 +26,8 @@
  */
 
 #include "Utility.hh"
+#include <algorithm>
+#include <cstdlib>
 #include <iomanip>
 #include <iostream>
 #include <string>
@@ -61,7 +63,7 @@ std::string& Core::itoa(std::string &s, unsigned int val) {
 	do {
 	    s += ('0' + (val % 10));
 	    val /= 10;
-	    } while (val);
+	} while (val);
 	std::reverse(s.begin(), s.end());
     }
     return s;
@@ -76,7 +78,7 @@ s32 Core::differenceUlp(f32 af, f32 bf) {
     b.f = bf;
     if (a.i < 0) a.i = 0x80000000 - a.i;
     if (b.i < 0) b.i = 0x80000000 - b.i;
-    return Core::abs(a.i - b.i);
+    return std::abs(a.i - b.i);
 }
 
 s64 Core::differenceUlp(f64 af, f64 bf) {
@@ -88,5 +90,5 @@ s64 Core::differenceUlp(f64 af, f64 bf) {
     b.f = bf;
     if (a.i < 0) a.i = (s64(1) << 63) - a.i;
     if (b.i < 0) b.i = (s64(1) << 63) - b.i;
-    return Core::abs(a.i - b.i);
+    return std::abs(a.i - b.i);
 }
