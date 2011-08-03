@@ -4,7 +4,7 @@ Convert sequitur model to FSA.
 """
 
 __author__    = 'Maximilian Bisani'
-__version__   = '$Revision: 95 $'
+__version__   = '$Revision: 1667 $'
 __date__      = '$Date: 2007-06-02 16:32:35 +0200 (Sat, 02 Jun 2007) $'
 __copyright__ = 'Copyright (c) 2004-2005  RWTH Aachen University'
 __license__   = """

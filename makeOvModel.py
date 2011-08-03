@@ -1,4 +1,4 @@
-o#!/usr/bin/env python
+#!/usr/bin/env python
 
 """
 Create an open-vocabulary speech recognition model
@@ -21,8 +21,10 @@ procedure:
 2. load models for fragmentizing unknown words (Sequitur G2P model)
 3. add fragements to lexicon and store augmented lexicon
 4. determine set of LM tokens
-5. create modified LM training corpus
+5. create modified LM training corpus counts
 6. count LM events
+7. (optional) dump list of fragmentized OOV words
+8. (optional) dump modified LM training corpus
 """
 
 __author__    = 'Maxilian Bisani'
@@ -53,6 +55,7 @@ negligent actions or intended actions or fraudulent concealment.
 """
 
 import sys
+import codecs
 import cPickle as pickle
 from elementtree.ElementTree import ElementTree, Element, Comment, SubElement
 from itertools import ifilter, starmap
@@ -161,12 +164,12 @@ class Fragmentizer:
 		translations.append(joint)
 	    except Translator.TranslationFailure:
 		print 'failed to represent "%s" using graphones' % word
-		translations.append(['[UNKNOWN]'])
+		translations.append([word+'[UNKNOWN]'])
 	return translations
 
 
 class RotatingDict:
-    def __init__(self, items):
+    def __init__(self, items=[]):
 	self.store = dict(items)
 
     def __contains__(self, key):
@@ -275,6 +278,48 @@ class PhonemeEventGenerator(EventGenerator):
 		pass
 	return mGramCounts.mGramsFromSequence(phon, self.order)
 
+class OovFragmentGenerator:
+    specialEvents = set([
+        '<s>', '</s>' ])
+    
+    def __init__(self, knownWords, fragmentizer):
+        self.knownWords = set(knownWords)
+        self.fragmentizer = fragmentizer
+        self.rotor = RotatingDict()
+        self.fragmentDict = {}
+
+    def fragmentize(self, word):
+        if word not in self.rotor:
+            self.rotor[word] = tuple(self.fragmentizer(word))
+        return self.rotor[word]
+
+    def __call__(self, source):
+        for line in source:
+            words = line.split()
+            self.frobnicate(words)
+        return self.fragmentDict
+    
+    def frobnicate(self, rawWords):
+        for w in rawWords:
+            if w in self.knownWords: continue
+            if w in self.specialEvents: continue
+            if w in self.fragmentDict.keys(): continue
+            fragments = self.fragmentize(w)
+            self.fragmentDict[w]=fragments
+
+    def modifyLmText(self, rawWords):
+        modWords=[]
+        for w in rawWords:
+            if w in self.knownWords:
+                modWords.append(w)
+            elif w in self.specialEvents:
+                modWords.append(w)
+            else:
+                fragments=self.fragmentize(w)
+                modWords.append(' '.join(fragments))
+        return modWords
+
+
 # ===========================================================================
 def main(options, args):
     # 1. load reference lexicon
@@ -358,7 +403,7 @@ def main(options, args):
 	elif options.model_type == 'phonemes':
 	    events = PhonemeEventGenerator(lexicon, order)
 
-    # 5. create modified LM training corpus
+    # 5. create modified LM training corpus counts
     if options.write_events:
 	print 'creating sequence model events ...'
 	f = gOpenOut(options.write_events, defaultEncoding)
@@ -371,6 +416,26 @@ def main(options, args):
 	counts = mGramCounts.SimpleMultifileStorage()
 	counts.addIter(events(gOpenIn(options.text, defaultEncoding)))
 	mGramCounts.TextStorage.write(gOpenOut(options.write_counts, defaultEncoding), counts)
+
+    # 7. dump list of OOV words and their corresponding fragmentation
+    if options.write_fragments:
+        print 'dumping fragments ...'
+        f = gOpenOut(options.write_fragments, defaultEncoding)
+        events = OovFragmentGenerator(knownWords, fragmentizer)
+        fragments =  events(gOpenIn(options.text, defaultEncoding))
+        for event in fragments.keys():
+            print >> f, event, '\t', ' '.join(fragments[event])
+
+    # 8. dump modified LM training text
+    if options.write_lm_text:
+        print 'dumping modified LM training text ...'
+        f = gOpenOut(options.write_lm_text, defaultEncoding)
+        events = OovFragmentGenerator(knownWords, fragmentizer)
+        for line in gOpenIn(options.text, defaultEncoding):
+            words = line.split()
+            modWords =  events.modifyLmText(words)
+            print >> f, " ".join(modWords)
+        
 
 
 # ===========================================================================
@@ -402,6 +467,12 @@ if __name__ == '__main__':
 	'--write-lexicon',
 	help="""write new lexicon to FILE""", metavar='FILE')
     optparser.add_option(
+	'--write-fragments',
+	help="""write OOV words and their fragmentation to FILE""", metavar='FILE')
+    optparser.add_option(
+	'--write-lm-text',
+	help="""write new LM text to FILE""", metavar='FILE')
+    optparser.add_option(
 	'--write-tokens',
 	help="write list of sequence model tokens to FILE", metavar='FILE')
     optparser.add_option(
@@ -425,5 +496,6 @@ if __name__ == '__main__':
     defaultEncoding = options.encoding
     import g2p
     g2p.defaultEncoding = defaultEncoding
+    sys.stdout = codecs.getwriter(defaultEncoding)(sys.stdout)
 
     main(options, args)

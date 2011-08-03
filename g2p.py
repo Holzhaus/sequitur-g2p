@@ -8,7 +8,7 @@ phonetic transcription) or Bliss XML Lexicon format.
 """
 
 __author__    = 'Maximilian Bisani'
-__version__   = '$LastChangedRevision: 95 $'
+__version__   = '$LastChangedRevision: 1667 $'
 __date__      = '$LastChangedDate: 2007-06-02 16:32:35 +0200 (Sat, 02 Jun 2007) $'
 __copyright__ = 'Copyright (c) 2004-2005  RWTH Aachen University'
 __license__   = """
