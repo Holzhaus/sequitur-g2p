@@ -1,5 +1,5 @@
 /*
- * $Id: Types.hh 95 2007-06-02 14:32:35Z max $
+ * $Id: Types.hh 1667 2007-06-02 14:32:35Z max $
  *
  * Copyright (c) 2004-2005  RWTH Aachen University
  *
